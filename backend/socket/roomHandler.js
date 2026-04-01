@@ -157,19 +157,14 @@ function handleRoomEvents(io, socket) {
 });
 
 socket.on("play", ({ roomId }) => {
-  if (!canControl(roomId, socket.id)) {
-    console.log("Permission denied: play");
-    return;
-  }
+  console.log("PLAY RECEIVED BACKEND");
 
-  rooms[roomId].isPlaying = true;
   socket.to(roomId).emit("play");
 });
 
 socket.on("pause", ({ roomId }) => {
-  if (!canControl(roomId, socket.id)) return;
+  console.log("PAUSE RECEIVED BACKEND");
 
-  rooms[roomId].isPlaying = false;
   socket.to(roomId).emit("pause");
 });
 
@@ -212,6 +207,19 @@ socket.on("assign_role", ({ roomId, userId, role }, callback) => {
   callback({ success: true });
 });
 
+socket.on("send_message", ({ roomId, message }) => {
+  const username = activeUsers.get(socket.id);
+
+  if (!username || !rooms[roomId]) return;
+
+  const msgData = {
+    username,
+    message,
+    time: new Date().toLocaleTimeString(),
+  };
+
+  io.to(roomId).emit("receive_message", msgData);
+});
 
 }
 
