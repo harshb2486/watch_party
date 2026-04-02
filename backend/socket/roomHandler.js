@@ -50,46 +50,36 @@ function handleRoomEvents(io, socket) {
     socket.join(roomId);
 
     console.log("Room created:", roomId);
-
     callback({ roomId });
   });
 
-  // JOIN ROOM
-  socket.on("join_room", ({ roomId }, callback) => {
-    const username = activeUsers.get(socket.id);
+socket.on("join_room", ({ roomId }, callback) => {
+  const username = activeUsers.get(socket.id);
 
-    if (!username) {
-      return callback({ error: "Not logged in" });
-    }
+  if (!username) return callback({ error: "Not logged in" });
+  if (!rooms[roomId]) return callback({ error: "Room not found" });
 
-    if (!rooms[roomId]) {
-      return callback({ error: "Room not found" });
-    }
+  socket.join(roomId);
 
-    socket.join(roomId);
+  const exists = rooms[roomId].users.find(u => u.id === socket.id);
 
-    const exists = rooms[roomId].users.find(u => u.id === socket.id);
-
-    if (!exists) {
-        rooms[roomId].users.push({
-        id: socket.id,
-        username,
-        role: "viewer", // ✅ default
-        });
-    }
-
-    io.to(roomId).emit("user_list", rooms[roomId].users);
-
-    socket.emit("sync_state", {
-      videoId: rooms[roomId].videoId,
-      isPlaying: rooms[roomId].isPlaying,
-      time: rooms[roomId].time,
+  if (!exists) {
+    rooms[roomId].users.push({
+      id: socket.id,
+      username,
+      role: "viewer",
     });
+  }
 
-    console.log(username, "joined", roomId);
+  // 🔥 SEND AFTER JOIN
+  setTimeout(() => {
+    socket.emit("current_user", { id: socket.id });
+  }, 100);
 
-    callback({ success: true });
-  });
+  io.to(roomId).emit("user_list", rooms[roomId].users);
+
+  callback({ success: true });
+});
 
   // DISCONNECT
   socket.on("disconnect", () => {
@@ -176,11 +166,15 @@ socket.on("seek", ({ roomId, time }) => {
 });
 
 socket.on("assign_role", ({ roomId, userId, role }, callback) => {
-  if (!rooms[roomId]) {
-    return callback({ error: "Room not found" });
-  }
+  const room = rooms[roomId];
 
-  if (!isHost(roomId, socket.id)) {
+  if (!room) return callback({ error: "Room not found" });
+
+  const currentUser = room.users.find(u => u.id === socket.id);
+
+  console.log("CURRENT USER:", currentUser);
+
+  if (!currentUser || currentUser.role !== "host") {
     return callback({ error: "Only host can assign roles" });
   }
 
@@ -190,11 +184,9 @@ socket.on("assign_role", ({ roomId, userId, role }, callback) => {
     return callback({ error: "Invalid role" });
   }
 
-  const user = rooms[roomId].users.find(u => u.id === userId);
+  const user = room.users.find(u => u.id === userId);
 
-  if (!user) {
-    return callback({ error: "User not found" });
-  }
+  if (!user) return callback({ error: "User not found" });
 
   if (user.role === "host") {
     return callback({ error: "Cannot change host role" });
@@ -202,7 +194,7 @@ socket.on("assign_role", ({ roomId, userId, role }, callback) => {
 
   user.role = role;
 
-  io.to(roomId).emit("user_list", rooms[roomId].users);
+  io.to(roomId).emit("user_list", room.users);
 
   callback({ success: true });
 });

@@ -8,6 +8,7 @@ function App() {
   const [roomId, setRoomId] = useState("");
   const [joined, setJoined] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  
 
   // LOGIN
   const login = () => {
@@ -23,14 +24,16 @@ function App() {
   };
 
   // CREATE ROOM
-  const createRoom = () => {
-    socket.emit("create_room", {}, (res: ApiResponse) => {
-      if (res.error) return alert(res.error);
+const createRoom = () => {
+  socket.emit("create_room", {}, (res) => {
+    setRoomId(res.roomId);
 
-      setRoomId(res.roomId);
+    // 🔥 immediately join the room
+    socket.emit("join_room", { roomId: res.roomId }, () => {
       setJoined(true);
     });
-  };
+  });
+};
 
   // JOIN ROOM
   const joinRoom = () => {
