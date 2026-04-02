@@ -1,6 +1,5 @@
-let rooms = {};
-let activeUsers = new Map(); 
-// socketId → username
+const rooms = {};
+const activeUsers = new Map();
 
 function isUsernameTaken(username) {
   return [...activeUsers.values()].includes(username);
@@ -32,5 +31,7 @@ module.exports = {
   rooms,
   activeUsers,
   isUsernameTaken,
-  getUsername,
+  getUser,
+  isHost,
+  canControl
 };
