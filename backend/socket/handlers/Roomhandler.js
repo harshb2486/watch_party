@@ -35,7 +35,10 @@ function handleRoom(io, socket) {
     callback({ roomId });
   });
 socket.on("join_room", ({ roomId }, cb) => {
-  const username = activeUsers.get(socket.id) || "Guest";
+  // prefer socket.user (set at login), fallback to activeUsers map
+  const username = socket.user?.username || activeUsers.get(socket.id) || "Guest";
+
+  console.log("join_room: socket.id=", socket.id, "socket.user=", socket.user, "activeUsers.get=", activeUsers.get(socket.id));
 
   // create room if missing
   if (!rooms[roomId]) {
