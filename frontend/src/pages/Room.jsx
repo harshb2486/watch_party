@@ -8,36 +8,22 @@ function Room({ roomId, user }) {
   const [connected, setConnected] = useState(false);
   const [videoId, setVideoId] = useState("dQw4w9WgXcQ");
 
+  // 🔌 CONNECT + JOIN (ONLY ONCE)
   useEffect(() => {
-      if (!socket.connected) {
-    socket.connect();
-  }
+    if (!socket.connected) {
+      socket.connect();
+      console.log("✅ socket connected");
+    }
 
-    // 🔐 LOGIN
-    socket.emit("login", { username: user }, (res) => {
-      if (res.error) {
-        console.log(res.error);
-        return;
-      }
-
-      // 👥 JOIN ROOM (send username 🔥)
-      socket.emit(
-        "join_room",
-        { roomId, username: user },
-        (res) => {
-          if (res.error) {
-            console.log(res.error);
-          } else {
-            setConnected(true);
-          }
-        }
-      );
+    // 🔐 login
+    socket.emit("login", { username: user }, () => {
+      // 👥 join room after login
+      socket.emit("join_room", { roomId, username: user }, () => {
+        setConnected(true); // ✅ now UI shows
+      });
     });
 
-    return () => {
-      socket.disconnect();
-    };
-  }, [roomId, user]);
+  }, []); // 🔥 ONLY ONCE
 
   // 🎬 VIDEO SYNC
   useEffect(() => {
@@ -46,10 +32,11 @@ function Room({ roomId, user }) {
       setVideoId(videoId);
     };
 
-    socket.off("sync_state");
     socket.on("sync_state", handleSync);
 
-    return () => socket.off("sync_state", handleSync);
+    return () => {
+      socket.off("sync_state", handleSync);
+    };
   }, []);
 
   return (
@@ -59,13 +46,8 @@ function Room({ roomId, user }) {
 
       {connected ? (
         <>
-          {/* 🎥 Player */}
           <Player roomId={roomId} videoId={videoId} />
-
-          {/* 💬 Chat */}
           <Chat roomId={roomId} />
-
-          {/* 👥 Users */}
           <UsersPanel roomId={roomId} />
         </>
       ) : (

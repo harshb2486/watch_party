@@ -6,17 +6,21 @@ function Chat({ roomId }) {
   const [messages, setMessages] = useState([]);
 
   // 📡 Receive messages
-  useEffect(() => {
-    const handleMessage = (data) => {
+useEffect(() => {
+  console.log("Chat mounted");
+
+  const handleMessage = (data) => {
+    console.log("💬 RECEIVED:", data);
     setMessages((prev) => [...prev, data]);
   };
 
-socket.removeAllListeners("receive_message"); // 🔥 prevent duplicates
-    socket.on("receive_message", handleMessage);
+  socket.on("receive_message", handleMessage);
+
   return () => {
     socket.off("receive_message", handleMessage);
   };
 }, []);
+
 
   // 📤 Send message
   const sendMessage = () => {
@@ -31,7 +35,8 @@ socket.removeAllListeners("receive_message"); // 🔥 prevent duplicates
 
     setMessage("");
   };
-
+ 
+  
   return (
     <div style={{ marginTop: 20 }}>
       <h3>💬 Chat</h3>

@@ -1,15 +1,13 @@
 const { activeUsers, rooms } = require("../helpers");
 
 function handleChat(io, socket) {
-
-io.on("connection", (socket) => {
-  console.log("User connected:", socket.id);
+  // Attach handlers to the already-connected socket instance
 
   // 👥 JOIN ROOM
   socket.on("join_room", ({ roomId, username }) => {
     socket.join(roomId);
 
-    socket.user = { username }; // 🔥 important
+    socket.user = { username };
 
     console.log(username, "joined", roomId);
   });
@@ -24,10 +22,8 @@ io.on("connection", (socket) => {
 
     console.log("MESSAGE:", msgData);
 
-    // 🔥 THIS LINE FIXES REAL-TIME
     io.to(roomId).emit("receive_message", msgData);
   });
-});
 }
 
 module.exports = { handleChat };
