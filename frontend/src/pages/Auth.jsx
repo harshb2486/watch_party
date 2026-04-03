@@ -36,7 +36,7 @@ function Auth({ setUser }) {
 
   return (
     <div>
-      <h2>🔐 Auth</h2>
+      <h2>Register/login</h2>
 
       <input placeholder="username" onChange={e => setUsername(e.target.value)} />
       <input type="password" placeholder="password" onChange={e => setPassword(e.target.value)} />
