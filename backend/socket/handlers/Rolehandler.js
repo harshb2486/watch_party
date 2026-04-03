@@ -31,7 +31,7 @@ function handleRole(io, socket) {
 
     user.role = role;
 
-    io.to(roomId).emit("user_list", room.users);
+    io.to(roomId).emit("user_list", { users: room.users, host: room.host });
 
     callback({ success: true });
   });

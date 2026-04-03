@@ -13,8 +13,10 @@ function handleAuth(io, socket) {
     }
 
     activeUsers.set(socket.id, username);
+    // attach to socket so other handlers can read it immediately
+    socket.user = { username };
 
-    console.log("User logged in:", username);
+    console.log("User logged in:", username, "(id:", socket.id, ")");
 
     callback({ success: true });
   });
@@ -47,7 +49,7 @@ function handleAuth(io, socket) {
     if (room.users.length === 0) {
       delete rooms[roomId];
     } else {
-      io.to(roomId).emit("user_list", room.users);
+      io.to(roomId).emit("user_list", { users: room.users, host: room.host });
     }
   }
 
